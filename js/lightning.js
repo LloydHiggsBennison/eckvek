@@ -6,6 +6,14 @@
 (function () {
     const canvas = document.getElementById('lightning-canvas');
     if (!canvas) return;
+
+    // Disable animation entirely on mobile devices for performance
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    if (isMobile) {
+        canvas.style.display = 'none';
+        return;
+    }
+
     const ctx = canvas.getContext('2d');
     const hero = canvas.parentElement;
 
