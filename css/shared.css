@@ -1,6 +1,12 @@
 /* ===== ECKVEK — Shared Styles ===== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('../vendor/inter/inter-latin-wght-normal.woff2') format('woff2');
+}
 
 /* ---------- CSS Variables ---------- */
 :root {
@@ -48,10 +54,8 @@ body {
 /* ---------- Navigation ---------- */
 nav.fondo {
     background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-    backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 100;
     height: 72px;
     display: flex;
@@ -418,15 +422,18 @@ footer p {
     align-items: center;
     justify-content: center;
     padding: 20px;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.35s ease, visibility 0.35s ease;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    color: var(--text);
     cursor: zoom-out;
 }
 
-.lightbox-overlay.active {
-    opacity: 1;
-    visibility: visible;
+.lightbox-overlay:not([open]) {
+    display: none;
 }
 
 .lightbox-overlay img {
@@ -437,12 +444,11 @@ footer p {
     object-fit: contain;
     border-radius: 10px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-    transform: scale(0.7);
+    cursor: default;
     transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    pointer-events: none;
 }
 
-.lightbox-overlay.active img {
+.lightbox-overlay[open] img {
     transform: scale(1);
 }
 
@@ -485,18 +491,18 @@ footer p {
 
 /* ---------- Shared Responsive ---------- */
 @media (max-width: 768px) {
-    .hamburger {
+    .menu-ready .hamburger {
         display: flex;
         z-index: 120;
     }
 
-    .nav {
+    .menu-ready .nav {
         position: fixed;
         top: 0;
         right: 0;
         bottom: 0;
         left: auto;
-        width: 280px;
+        width: min(280px, 100vw);
         height: 100vh;
         height: 100dvh;
         flex-direction: column;
@@ -508,6 +514,7 @@ footer p {
         padding: 80px 16px 40px;
         z-index: 115;
         transform: translateX(100%);
+        visibility: hidden;
         transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         box-shadow: -8px 0 40px rgba(0, 0, 0, 0.7);
         overflow-y: auto;
@@ -515,6 +522,7 @@ footer p {
     }
 
     .nav.open {
+        visibility: visible;
         transform: translateX(0);
     }
 
@@ -558,4 +566,29 @@ footer p {
         width: 100%;
         justify-content: center;
     }
+}
+/* Progressive enhancement and keyboard access. */
+header { position: sticky; top: 0; z-index: 100; }
+:focus-visible { outline: 3px solid #ffcc4d; outline-offset: 4px; }
+section[id], main { scroll-margin-top: 88px; }
+.skip-link { position: fixed; top: 8px; left: 8px; padding: 12px; background: #071222; color: white; z-index: 2000; transform: translateY(-160%); }
+.skip-link:focus { transform: none; }
+.image-trigger { position: absolute; inset: 0; z-index: 4; cursor: zoom-in; border-radius: var(--radius); }
+.image-trigger:focus-visible { outline-offset: -5px; }
+.work-card:focus-within .card-overlay, .gallery-card:focus-within .card-info { opacity: 1; transform: none; }
+.reveal-pending { opacity: 0; transform: translateY(30px); }
+.whatsapp-button { color: white; text-decoration: none; font-size: 32px; }
+.hero-content .hero-company { color: #7ee9ff; font-weight: 600; margin-bottom: 8px; }
+@media (max-width: 768px) {
+    html:not(.menu-ready) nav.fondo { height: auto; padding: 12px; }
+    html:not(.menu-ready) .nav { flex-wrap: wrap; padding: 0; height: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+    .reveal-pending { opacity: 1; transform: none; }
+}
+
+/* Do not display or allocate an animated hero on phones, including landscape. */
+@media (max-width: 768px), (hover: none) and (pointer: coarse), (prefers-reduced-motion: reduce) {
+    .hero-lightning { display: none; }
 }

@@ -68,8 +68,6 @@
     box-shadow: var(--shadow);
     transition: var(--transition);
     cursor: pointer;
-    opacity: 0;
-    transform: translateY(40px);
 }
 
 .gallery-card.visible {
@@ -208,8 +206,6 @@
     padding: 32px 24px;
     text-align: center;
     transition: var(--transition);
-    opacity: 0;
-    transform: translateY(30px);
 }
 
 .cert-card.visible {
