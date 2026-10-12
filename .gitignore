@@ -30,3 +30,10 @@ npm-debug.log*
 
 # Old source folder (migrated to img/, js/, css/)
 # src/
+
+# Generated test reports
+playwright-report/
+test-results/
+reports/
+.vercel/
+.playwright-browsers/

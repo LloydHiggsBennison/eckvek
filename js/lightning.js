@@ -1,250 +1,258 @@
-/**
- * Electric Network 3D — ECKVEK Hero Background
- * Vanta-style 3D electric network with floating nodes,
- * lightning arcs between them, and depth perspective.
- */
+/** Electric hero: pooled paths, batched strokes and a cached node halo. */
 (function () {
     const canvas = document.getElementById('lightning-canvas');
     if (!canvas) return;
-
-    // Disable animation entirely on mobile devices for performance
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    if (isMobile) {
-        canvas.style.display = 'none';
-        return;
-    }
-
-    const ctx = canvas.getContext('2d');
+    const mobile = window.matchMedia('(max-width: 768px), (hover: none) and (pointer: coarse)');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const hero = canvas.parentElement;
-
-    let W, H;
-    function resize() {
-        W = hero.offsetWidth;
-        H = hero.offsetHeight;
-        canvas.width = W * 2;
-        canvas.height = H * 2;
-        ctx.setTransform(2, 0, 0, 2, 0, 0);
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    /* --- 3D Node System --- */
-    const NODE_COUNT = 55;
+    const NODE_COUNT = 32;
+    const MAX_LINKS = 96;
+    const LINK_DISTANCE = 180;
     const DEPTH = 600;
-    const CONNECTION_DIST = 180;
-    const nodes = [];
-
-    function createNode() {
-        return {
-            x: (Math.random() - 0.5) * W * 1.4,
-            y: (Math.random() - 0.5) * H * 1.4,
-            z: Math.random() * DEPTH,
-            vx: (Math.random() - 0.5) * 0.3,
-            vy: (Math.random() - 0.5) * 0.3,
-            vz: -0.15 - Math.random() * 0.25,
-            size: 1 + Math.random() * 2,
-            pulse: Math.random() * Math.PI * 2,
-        };
-    }
-
-    for (let i = 0; i < NODE_COUNT; i++) nodes.push(createNode());
-
-    /* --- Project 3D → 2D --- */
     const FOV = 500;
-    function project(node) {
-        const scale = FOV / (FOV + node.z);
-        return {
-            x: W / 2 + node.x * scale,
-            y: H / 2 + node.y * scale,
-            s: scale,
-            z: node.z,
-        };
+    const FRAME_MS = 1000 / 30;
+    const nodes = [];
+    const links = [];
+    const projected = [];
+    let ctx = null;
+    let halo = null;
+    let unavailable = false;
+    let inView = !('IntersectionObserver' in window);
+    let frameId = null;
+    let lastFrame = null;
+    let activeTime = 0;
+    let nextLinkUpdate = 0;
+    let nextPulse = 6;
+    let pulsePath = null;
+    let pulseLife = 0;
+    let W = 0;
+    let H = 0;
+    let linkCount = 0;
+
+    function allowed() {
+        return !unavailable && !mobile.matches && !reducedMotion.matches && !document.hidden && inView;
     }
-
-    /* --- Draw electric arc between two projected points --- */
-    function drawArc(p1, p2, alpha, time) {
-        const dx = p2.x - p1.x;
-        const dy = p2.y - p1.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const segments = Math.max(4, Math.floor(dist / 20));
-        const jag = 4 + dist * 0.04;
-
-        // Build jagged path
-        const points = [{ x: p1.x, y: p1.y }];
-        for (let i = 1; i < segments; i++) {
-            const t = i / segments;
-            points.push({
-                x: p1.x + dx * t + (Math.random() - 0.5) * jag,
-                y: p1.y + dy * t + (Math.random() - 0.5) * jag,
-            });
-        }
-        points.push({ x: p2.x, y: p2.y });
-
-        // Outer glow
-        ctx.save();
-        ctx.globalAlpha = alpha * 0.25;
-        ctx.strokeStyle = 'rgba(0, 180, 216, 1)';
-        ctx.lineWidth = 3;
-        ctx.shadowColor = 'rgba(0, 180, 216, 0.7)';
-        ctx.shadowBlur = 15;
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
-        ctx.stroke();
-        ctx.restore();
-
-        // Core
-        ctx.save();
-        ctx.globalAlpha = alpha * 0.6;
-        ctx.strokeStyle = 'rgba(140, 225, 255, 0.85)';
-        ctx.lineWidth = 1;
-        ctx.shadowColor = 'rgba(0, 200, 255, 0.4)';
-        ctx.shadowBlur = 6;
-        ctx.lineJoin = 'bevel';
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
-        ctx.stroke();
-        ctx.restore();
-    }
-
-    /* --- Sporadic main lightning bolt --- */
-    let mainBolt = null;
-    let mainBoltTimer = 0;
-
-    function spawnMainBolt() {
-        const y = H * (0.25 + Math.random() * 0.5);
-        const points = [{ x: 0, y: y }];
-        let cx = 0;
-        while (cx < W) {
-            const step = 15 + Math.random() * 25;
-            cx += step;
-            // Occasionally make a big spike (heartbeat R-wave)
-            const isSpike = Math.random() < 0.08;
-            const jy = isSpike
-                ? (Math.random() > 0.5 ? -1 : 1) * (60 + Math.random() * 80)
-                : (Math.random() - 0.5) * 20;
-            points.push({ x: cx, y: y + jy });
-        }
-        mainBolt = { points, life: 1.0, decay: 0.012 };
-    }
-
-    function drawMainBolt() {
-        if (!mainBolt || mainBolt.life <= 0) return;
-        const a = mainBolt.life;
-
-        // Wide glow
-        ctx.save();
-        ctx.globalAlpha = a * 0.15;
-        ctx.strokeStyle = 'rgba(0, 180, 216, 1)';
-        ctx.lineWidth = 8;
-        ctx.shadowColor = 'rgba(0, 180, 216, 0.8)';
-        ctx.shadowBlur = 30;
-        ctx.beginPath();
-        ctx.moveTo(mainBolt.points[0].x, mainBolt.points[0].y);
-        for (let i = 1; i < mainBolt.points.length; i++) {
-            ctx.lineTo(mainBolt.points[i].x, mainBolt.points[i].y);
-        }
-        ctx.stroke();
-        ctx.restore();
-
-        // Core
-        ctx.save();
-        ctx.globalAlpha = a * 0.5;
-        ctx.strokeStyle = 'rgba(180, 240, 255, 0.9)';
-        ctx.lineWidth = 1.5;
-        ctx.shadowColor = 'rgba(0, 220, 255, 0.5)';
-        ctx.shadowBlur = 10;
-        ctx.lineJoin = 'bevel';
-        ctx.beginPath();
-        ctx.moveTo(mainBolt.points[0].x, mainBolt.points[0].y);
-        for (let i = 1; i < mainBolt.points.length; i++) {
-            ctx.lineTo(mainBolt.points[i].x, mainBolt.points[i].y);
-        }
-        ctx.stroke();
-        ctx.restore();
-
-        mainBolt.life -= mainBolt.decay;
-    }
-
-    /* --- Main animation loop --- */
-    function animate(time) {
-        ctx.clearRect(0, 0, W, H);
-
-        // Move nodes
-        nodes.forEach(n => {
-            n.x += n.vx;
-            n.y += n.vy;
-            n.z += n.vz;
-            n.pulse += 0.02;
-
-            // Reset when node passes camera
-            if (n.z < -50) {
-                n.z = DEPTH;
-                n.x = (Math.random() - 0.5) * W * 1.4;
-                n.y = (Math.random() - 0.5) * H * 1.4;
+    function resize() {
+        if (!ctx || !allowed()) return;
+        const oldW = W;
+        const oldH = H;
+        W = hero.clientWidth;
+        H = hero.clientHeight;
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.round(W * ratio);
+        const height = Math.round(H * ratio);
+        if (canvas.width !== width) canvas.width = width;
+        if (canvas.height !== height) canvas.height = height;
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        if (oldW !== W || oldH !== H) {
+            if (oldW && oldH) {
+                for (const node of nodes) { node.x *= W / oldW; node.y *= H / oldH; }
             }
-        });
-
-        // Project all nodes
-        const projected = nodes.map((n, i) => ({ ...project(n), idx: i, node: n }));
-        // Sort by depth (far first)
-        projected.sort((a, b) => b.z - a.z);
-
-        // Draw connections between close nodes
-        for (let i = 0; i < projected.length; i++) {
-            for (let j = i + 1; j < projected.length; j++) {
+            pulsePath = null;
+            pulseLife = 0;
+            nextLinkUpdate = 0;
+        }
+    }
+    function initialize() {
+        if (ctx) return true;
+        ctx = canvas.getContext('2d');
+        if (!ctx) { unavailable = true; canvas.hidden = true; return false; }
+        resize();
+        for (let i = 0; i < NODE_COUNT; i++) {
+            nodes.push({
+                x: (Math.random() - 0.5) * W * 1.4,
+                y: (Math.random() - 0.5) * H * 1.4,
+                z: Math.random() * DEPTH,
+                vx: (Math.random() - 0.5) * 9,
+                vy: (Math.random() - 0.5) * 9,
+                vz: -4.5 - Math.random() * 7.5,
+                size: 1 + Math.random() * 2,
+                pulse: Math.random() * Math.PI * 2,
+            });
+            projected.push({ x: 0, y: 0, scale: 0, radius: 0, alpha: 0 });
+        }
+        // Fixed pools: no new point arrays, node objects or sorting per frame.
+        for (let i = 0; i < MAX_LINKS; i++) {
+            links.push({ a: 0, b: 0, segments: 0, bucket: 0, offsets: new Float32Array(32) });
+        }
+        halo = document.createElement('canvas');
+        halo.width = halo.height = 64;
+        const haloContext = halo.getContext('2d');
+        if (haloContext) {
+            const gradient = haloContext.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(0, 200, 240, 0.2)');
+            gradient.addColorStop(1, 'rgba(0, 180, 216, 0)');
+            haloContext.fillStyle = gradient;
+            haloContext.fillRect(0, 0, 64, 64);
+        } else halo = null;
+        if ('ResizeObserver' in window) new ResizeObserver(resize).observe(hero);
+        else window.addEventListener('resize', resize);
+        return true;
+    }
+    function updateNodes(seconds) {
+        for (let i = 0; i < NODE_COUNT; i++) {
+            const node = nodes[i];
+            node.x += node.vx * seconds;
+            node.y += node.vy * seconds;
+            node.z += node.vz * seconds;
+            node.pulse += 0.6 * seconds;
+            if (node.z < -50) {
+                node.z = DEPTH;
+                node.x = (Math.random() - 0.5) * W * 1.4;
+                node.y = (Math.random() - 0.5) * H * 1.4;
+            }
+            const point = projected[i];
+            point.scale = FOV / (FOV + node.z);
+            point.x = W / 2 + node.x * point.scale;
+            point.y = H / 2 + node.y * point.scale;
+            point.radius = node.size * point.scale;
+            point.alpha = point.scale * (0.6 + 0.4 * Math.sin(node.pulse));
+        }
+    }
+    function updateLinks() {
+        linkCount = 0;
+        for (let i = 0; i < NODE_COUNT && linkCount < MAX_LINKS; i++) {
+            for (let j = i + 1; j < NODE_COUNT && linkCount < MAX_LINKS; j++) {
                 const a = projected[i];
                 const b = projected[j];
-                const dx = a.x - b.x;
-                const dy = a.y - b.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist < CONNECTION_DIST) {
-                    const depthFade = Math.min(a.s, b.s);
-                    const distFade = 1 - dist / CONNECTION_DIST;
-                    const alpha = distFade * depthFade * 0.5;
-
-                    // Draw as electric arc (re-jags each frame for flicker)
-                    if (alpha > 0.02) {
-                        drawArc(a, b, alpha, time);
-                    }
+                const dx = b.x - a.x;
+                const dy = b.y - a.y;
+                const squared = dx * dx + dy * dy;
+                if (squared >= LINK_DISTANCE * LINK_DISTANCE) continue;
+                const distance = Math.sqrt(squared);
+                const alpha = (1 - distance / LINK_DISTANCE) * Math.min(a.scale, b.scale) * 0.5;
+                if (alpha <= 0.02) continue;
+                const link = links[linkCount++];
+                link.a = i;
+                link.b = j;
+                link.segments = Math.min(15, Math.max(4, Math.floor(distance / 20)));
+                link.bucket = alpha < 0.12 ? 0 : alpha < 0.24 ? 1 : 2;
+                const jitter = 4 + distance * 0.04;
+                for (let k = 1; k < link.segments; k++) {
+                    link.offsets[k * 2] = (Math.random() - 0.5) * jitter;
+                    link.offsets[k * 2 + 1] = (Math.random() - 0.5) * jitter;
                 }
             }
         }
-
-        // Draw nodes
-        projected.forEach(p => {
-            const glow = 0.6 + 0.4 * Math.sin(p.node.pulse);
-            const radius = p.node.size * p.s;
-            const alpha = p.s * glow;
-
-            if (alpha < 0.03) return;
-
-            // Node glow halo
-            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius * 8);
-            grad.addColorStop(0, `rgba(0, 200, 240, ${alpha * 0.2})`);
-            grad.addColorStop(1, 'rgba(0, 180, 216, 0)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(p.x - radius * 8, p.y - radius * 8, radius * 16, radius * 16);
-
-            // Bright center
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, Math.max(0.5, radius), 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(180, 240, 255, ${alpha * 0.8})`;
-            ctx.fill();
-        });
-
-        // Sporadic full-width lightning bolt
-        mainBoltTimer++;
-        if (mainBoltTimer > 180 + Math.random() * 200) {
-            spawnMainBolt();
-            mainBoltTimer = 0;
-        }
-        drawMainBolt();
-
-        requestAnimationFrame(animate);
+        nextLinkUpdate = activeTime + 0.1;
     }
-
-    requestAnimationFrame(animate);
+    function drawLinks() {
+        // Three opacity groups, two strokes each; no per-link shadow blur.
+        for (let bucket = 0; bucket < 3; bucket++) {
+            let count = 0;
+            ctx.beginPath();
+            for (let i = 0; i < linkCount; i++) {
+                const link = links[i];
+                if (link.bucket !== bucket) continue;
+                const a = projected[link.a];
+                const b = projected[link.b];
+                ctx.moveTo(a.x, a.y);
+                for (let k = 1; k < link.segments; k++) {
+                    const t = k / link.segments;
+                    ctx.lineTo(a.x + (b.x - a.x) * t + link.offsets[k * 2],
+                        a.y + (b.y - a.y) * t + link.offsets[k * 2 + 1]);
+                }
+                ctx.lineTo(b.x, b.y);
+                count++;
+            }
+            if (!count) continue;
+            const alpha = bucket === 0 ? 0.08 : bucket === 1 ? 0.18 : 0.32;
+            ctx.globalAlpha = alpha * 0.25;
+            ctx.strokeStyle = '#00b4d8';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.globalAlpha = alpha * 0.6;
+            ctx.strokeStyle = '#8ce1ff';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+    }
+    function drawNodes() {
+        ctx.fillStyle = '#b4f0ff';
+        for (const point of projected) {
+            if (point.alpha < 0.03) continue;
+            if (halo) {
+                ctx.globalAlpha = point.alpha;
+                const radius = point.radius * 8;
+                ctx.drawImage(halo, point.x - radius, point.y - radius, radius * 2, radius * 2);
+            }
+            ctx.globalAlpha = point.alpha * 0.8;
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, Math.max(0.5, point.radius), 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+    function spawnPulse() {
+        const y = H * (0.25 + Math.random() * 0.5);
+        pulsePath = new Path2D();
+        pulsePath.moveTo(0, y);
+        let x = 0;
+        while (x < W) {
+            x += 15 + Math.random() * 25;
+            const spike = Math.random() < 0.08;
+            const offset = spike ? (Math.random() > 0.5 ? -1 : 1) * (60 + Math.random() * 80)
+                : (Math.random() - 0.5) * 20;
+            pulsePath.lineTo(x, y + offset);
+        }
+        pulseLife = 1;
+        nextPulse = activeTime + 6 + Math.random() * 4;
+    }
+    function drawPulse(seconds) {
+        if (activeTime >= nextPulse) spawnPulse();
+        if (!pulsePath || pulseLife <= 0) return;
+        ctx.globalAlpha = pulseLife * 0.15;
+        ctx.strokeStyle = '#00b4d8';
+        ctx.lineWidth = 8;
+        ctx.shadowColor = 'rgba(0, 180, 216, 0.8)';
+        ctx.shadowBlur = 30;
+        ctx.stroke(pulsePath);
+        ctx.globalAlpha = pulseLife * 0.5;
+        ctx.strokeStyle = '#b4f0ff';
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = 'rgba(0, 220, 255, 0.5)';
+        ctx.shadowBlur = 10;
+        ctx.stroke(pulsePath);
+        ctx.shadowBlur = 0;
+        pulseLife -= 0.36 * seconds;
+    }
+    function animate(time) {
+        frameId = null;
+        if (!allowed()) return;
+        if (lastFrame !== null && time - lastFrame < FRAME_MS - 0.5) {
+            frameId = requestAnimationFrame(animate);
+            return;
+        }
+        const seconds = lastFrame === null ? 1 / 30 : Math.min((time - lastFrame) / 1000, 0.1);
+        lastFrame = time;
+        activeTime += seconds;
+        ctx.clearRect(0, 0, W, H);
+        updateNodes(seconds);
+        if (activeTime >= nextLinkUpdate) updateLinks();
+        ctx.lineJoin = 'bevel';
+        drawLinks();
+        drawNodes();
+        drawPulse(seconds);
+        ctx.globalAlpha = 1;
+        frameId = requestAnimationFrame(animate);
+    }
+    function syncAnimation() {
+        canvas.hidden = unavailable || mobile.matches || reducedMotion.matches;
+        if (allowed() && initialize()) {
+            resize();
+            if (frameId === null) frameId = requestAnimationFrame(animate);
+        } else {
+            if (frameId !== null) cancelAnimationFrame(frameId);
+            frameId = null;
+            lastFrame = null;
+            if (canvas.width !== 0) canvas.width = 0;
+            if (canvas.height !== 0) canvas.height = 0;
+        }
+    }
+    mobile.addEventListener('change', syncAnimation);
+    reducedMotion.addEventListener('change', syncAnimation);
+    document.addEventListener('visibilitychange', syncAnimation);
+    if ('IntersectionObserver' in window) {
+        new IntersectionObserver(entries => { inView = entries[0].isIntersecting; syncAnimation(); }).observe(hero);
+    }
+    syncAnimation();
 })();

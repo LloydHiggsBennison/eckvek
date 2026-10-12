@@ -1,74 +1,88 @@
-/**
- * ECKVEK — Main Page Script (index.html)
- * Scroll reveal, Lightbox, Smooth scroll, Hamburger menu
- */
+/** Shared progressive navigation, image viewer and scroll reveal. */
 document.addEventListener('DOMContentLoaded', () => {
-
-    // ── Hamburger Menu ──
     const hamburger = document.getElementById('hamburger');
-    const nav = document.querySelector('.nav');
+    const nav = document.getElementById('primary-nav');
+    const mobile = window.matchMedia('(max-width: 768px)');
     if (hamburger && nav) {
-        hamburger.addEventListener('click', () => {
-            hamburger.classList.toggle('active');
-            nav.classList.toggle('open');
+        function setMenu(open, restoreFocus = false) {
+            open = mobile.matches && open;
+            hamburger.classList.toggle('active', open);
+            hamburger.setAttribute('aria-expanded', String(open));
+            hamburger.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+            nav.classList.toggle('open', open);
+            nav.inert = mobile.matches && !open;
+            if (restoreFocus) hamburger.focus();
+        }
+        document.documentElement.classList.add('menu-ready');
+        setMenu(false);
+        hamburger.addEventListener('click', () => setMenu(!nav.classList.contains('open')));
+        nav.addEventListener('click', event => {
+            if (event.target.closest('a')) setMenu(false);
         });
-        // Close menu when clicking a link
-        nav.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                hamburger.classList.remove('active');
-                nav.classList.remove('open');
+        document.addEventListener('click', event => {
+            if (!event.target.closest('header')) setMenu(false);
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && nav.classList.contains('open')) setMenu(false, true);
+        });
+        document.addEventListener('focusin', event => {
+            if (!event.target.closest('header')) setMenu(false);
+        });
+        mobile.addEventListener('change', () => setMenu(false));
+    }
+    const cards = document.querySelectorAll('.service-card, .about-card, .work-card, .gallery-card, .cert-card');
+    if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.remove('reveal-pending');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        cards.forEach(card => {
+            card.classList.add('reveal-pending');
+            observer.observe(card);
+        });
+    }
+    const dialog = document.getElementById('lightbox');
+    const image = document.getElementById('lightbox-img');
+    const caption = document.getElementById('lightbox-caption');
+    const closeButton = document.getElementById('lightbox-close');
+    if (dialog && image && caption && closeButton && typeof dialog.showModal === 'function') {
+        let previousFocus;
+        let previousOverflow;
+        document.querySelectorAll('.image-trigger').forEach(trigger => {
+            trigger.addEventListener('click', event => {
+                if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+                event.preventDefault();
+                const source = trigger.parentElement.querySelector('img');
+                image.src = trigger.href;
+                image.alt = source.alt;
+                caption.textContent = source.alt;
+                previousFocus = trigger;
+                previousOverflow = document.body.style.overflow;
+                document.body.style.overflow = 'hidden';
+                dialog.showModal();
+                closeButton.focus();
             });
         });
-    }
-
-    // ── Scroll Reveal Animations ──
-    const animatedElements = document.querySelectorAll('.service-card, .about-card, .work-card');
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                observer.unobserve(entry.target);
+        closeButton.addEventListener('click', () => dialog.close());
+        dialog.addEventListener('keydown', event => {
+            // This viewer has one interactive control. Keep Tab inside it,
+            // including browsers that otherwise move focus to their chrome.
+            if (event.key === 'Tab') {
+                event.preventDefault();
+                closeButton.focus();
             }
         });
-    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-    animatedElements.forEach(el => observer.observe(el));
-
-    // ── Lightbox ──
-    const overlay = document.getElementById('lightbox');
-    const lbImg = document.getElementById('lightbox-img');
-    const lbCaption = document.getElementById('lightbox-caption');
-    const lbClose = document.getElementById('lightbox-close');
-
-    document.querySelectorAll('.work-card .card-image-wrapper img').forEach(img => {
-        img.addEventListener('click', (e) => {
-            e.stopPropagation();
-            lbImg.src = img.src;
-            lbImg.alt = img.alt;
-            lbCaption.textContent = img.alt;
-            overlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
+        dialog.addEventListener('click', event => {
+            if (event.target === dialog) dialog.close();
         });
-    });
-
-    function closeLightbox() {
-        overlay.classList.remove('active');
-        document.body.style.overflow = '';
+        dialog.addEventListener('close', () => {
+            document.body.style.overflow = previousOverflow ?? '';
+            image.removeAttribute('src');
+            previousFocus?.focus({ preventScroll: true });
+        });
     }
-
-    overlay.addEventListener('click', closeLightbox);
-    lbClose.addEventListener('click', closeLightbox);
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeLightbox();
-    });
-
-    // ── Smooth Scroll for Anchor Links ──
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        });
-    });
 });

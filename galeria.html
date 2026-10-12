@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Galería de Trabajos — ECKVEK® SpA.</title>
     <meta name="description" content="Galería de trabajos eléctricos de ECKVEK SpA. Instalaciones residenciales, comerciales e industriales con certificación SEC en todo Chile.">
     <meta name="keywords" content="galería trabajos eléctricos, instalaciones SEC, proyectos eléctricos, ECKVEK, Chile">
@@ -14,7 +14,7 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="Galería de Trabajos — ECKVEK® SpA.">
     <meta property="og:description" content="Galería de trabajos eléctricos certificados SEC. Instalaciones residenciales, comerciales e industriales.">
-    <meta property="og:image" content="https://eckvek.vercel.app/img/eckvek-logo.png">
+    <meta property="og:image" content="https://eckvek.vercel.app/img/eckvek-logo.jpg">
     <meta property="og:url" content="https://eckvek.vercel.app/galeria.html">
     <meta property="og:locale" content="es_CL">
 
@@ -22,29 +22,30 @@
     <link rel="icon" type="image/jpeg" href="img/eckvek-logo.jpg">
 
     <!-- Styles -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/shared.css">
     <link rel="stylesheet" href="css/galeria.css">
 </head>
 <body>
+    <a class="skip-link" href="#main-content">Saltar al contenido</a>
 
     <!-- Navigation -->
     <header>
         <nav class="fondo" role="navigation" aria-label="Navegación principal">
-            <button class="hamburger" id="hamburger" aria-label="Abrir menú" aria-expanded="false">
+            <button class="hamburger" id="hamburger" aria-label="Abrir menú" aria-expanded="false" aria-controls="primary-nav" type="button">
                 <span></span>
                 <span></span>
                 <span></span>
             </button>
-            <ul class="nav">
+            <ul class="nav" id="primary-nav">
                 <li><a href="index.html">Inicio</a></li>
                 <li><a href="index.html#section-about">Quienes Somos</a></li>
                 <li><a href="index.html#section-works">Nuestros Trabajos</a></li>
-                <li><a href="galeria.html" class="active">Galería</a></li>
+                <li><a href="galeria.html" class="active" aria-current="page">Galería</a></li>
                 <li><a href="index.html#section-contact">Contacto</a></li>
                 <li>
                     <a href="mailto:eckvek.ing.spa@gmail.com">
-                        <i class="fas fa-envelope" style="margin-right: 5px;"></i>Email
+                        <i aria-hidden="true" class="fas fa-envelope" style="margin-right: 5px;"></i>Email
                     </a>
                 </li>
             </ul>
@@ -52,23 +53,25 @@
     </header>
 
     <!-- WhatsApp Floating Button -->
-    <a href="https://wa.me/+56968601223?text=Hola,%20quiero%20saber%20más%20sobre%20sus%20servicios" class="whatsapp-button" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" width="30" height="30">
+    <a href="https://wa.me/56968601223?text=Hola,%20quiero%20saber%20más%20sobre%20sus%20servicios" class="whatsapp-button" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp">
+        <i aria-hidden="true" class="fab fa-whatsapp"></i>
     </a>
 
     <!-- SEC Badge -->
-    <img class="sec-fixed" src="img/sec-badge.jpg" alt="Logo SEC autorizado" width="80" height="80">
+    <img class="sec-fixed" src="img/sec-badge.webp" alt="Logo SEC autorizado" width="160" height="160" decoding="async">
+
+    <main id="main-content" tabindex="-1">
 
     <!-- Hero Section -->
     <section class="gallery-hero">
         <!-- Electric Lightning Canvas -->
-        <canvas class="hero-lightning" id="lightning-canvas"></canvas>
+        <canvas class="hero-lightning" id="lightning-canvas" aria-hidden="true" width="0" height="0"></canvas>
         <div class="hero-logo">
-            <img src="img/eckvek-logo.jpg" alt="ECKVEK Logo" width="270" height="270">
+            <img src="img/eckvek-logo.webp" alt="ECKVEK Logo" fetchpriority="high" width="540" height="540" decoding="async">
         </div>
         <div class="hero-content">
             <div class="hero-badge">
-                <i class="fas fa-certificate"></i>
+                <i aria-hidden="true" class="fas fa-certificate"></i>
                 Certificados SEC — Nivel Nacional
             </div>
             <h1>Galería de <span>Trabajos</span></h1>
@@ -76,13 +79,12 @@
         </div>
     </section>
 
-    <main>
 
         <!-- ========== TRABAJOS RESIDENCIALES ========== -->
         <section class="gallery-section" id="residencial">
             <div class="gallery-container">
                 <div class="section-title-group">
-                    <div class="section-icon"><i class="fas fa-home"></i></div>
+                    <div class="section-icon"><i aria-hidden="true" class="fas fa-home"></i></div>
                     <span class="section-label">Categoría</span>
                     <h2>Trabajos Residenciales</h2>
                     <p>Instalaciones eléctricas para hogares con los más altos estándares de calidad y seguridad, cumpliendo normativa SEC vigente.</p>
@@ -93,8 +95,9 @@
                     <!-- Card 1 -->
                     <div class="gallery-card" data-category="hogar">
                         <div class="card-image-wrapper">
-                            <img src="img/galeria/residencial.jpg" alt="Instalación eléctrica residencial" loading="lazy">
-                            <span class="card-badge hogar"><i class="fas fa-home"></i> Hogar</span>
+                            <img src="img/galeria/residencial.webp" alt="Instalación eléctrica residencial" loading="lazy" width="1200" height="896" decoding="async">
+                            <a class="image-trigger" href="img/galeria/residencial.webp" aria-label="Ampliar: Instalación eléctrica residencial"></a>
+                            <span class="card-badge hogar"><i aria-hidden="true" class="fas fa-home"></i> Hogar</span>
                             <div class="card-info">
                                 <h3>Instalación Eléctrica Residencial</h3>
                                 <p>Instalaciones eléctricas completas para viviendas con certificación SEC y protecciones normadas.</p>
@@ -109,8 +112,9 @@
                     <!-- Card 2 -->
                     <div class="gallery-card" data-category="hogar">
                         <div class="card-image-wrapper">
-                            <img src="img/galeria/iluminacion-led.jpg" alt="Iluminación LED residencial" loading="lazy">
-                            <span class="card-badge hogar"><i class="fas fa-home"></i> Hogar</span>
+                            <img src="img/galeria/iluminacion-led.webp" alt="Iluminación LED residencial" loading="lazy" width="1195" height="1600" decoding="async">
+                            <a class="image-trigger" href="img/galeria/iluminacion-led.webp" aria-label="Ampliar: Iluminación LED residencial"></a>
+                            <span class="card-badge hogar"><i aria-hidden="true" class="fas fa-home"></i> Hogar</span>
                             <div class="card-info">
                                 <h3>Iluminación LED</h3>
                                 <p>Diseño e instalación de sistemas de iluminación LED de alta eficiencia energética para hogares.</p>
@@ -125,8 +129,9 @@
                     <!-- Card 3 -->
                     <div class="gallery-card" data-category="hogar">
                         <div class="card-image-wrapper">
-                            <img src="img/galeria/plano.jpg" alt="Plano eléctrico" loading="lazy">
-                            <span class="card-badge hogar"><i class="fas fa-home"></i> Hogar</span>
+                            <img src="img/galeria/plano.webp" alt="Plano eléctrico" loading="lazy" width="1200" height="896" decoding="async">
+                            <a class="image-trigger" href="img/galeria/plano.webp" aria-label="Ampliar: Plano eléctrico"></a>
+                            <span class="card-badge hogar"><i aria-hidden="true" class="fas fa-home"></i> Hogar</span>
                             <div class="card-info">
                                 <h3>Planos Eléctricos</h3>
                                 <p>Elaboración de planos eléctricos según normativa SEC vigente para aprobación y declaración.</p>
@@ -146,7 +151,7 @@
         <section class="gallery-section" id="comercial">
             <div class="gallery-container">
                 <div class="section-title-group">
-                    <div class="section-icon"><i class="fas fa-industry"></i></div>
+                    <div class="section-icon"><i aria-hidden="true" class="fas fa-industry"></i></div>
                     <span class="section-label">Categoría</span>
                     <h2>Trabajos Comerciales e Industriales</h2>
                     <p>Proyectos eléctricos de media y alta complejidad para empresas, locales comerciales, bodegas e industrias con certificación SEC.</p>
@@ -157,8 +162,9 @@
                     <!-- Card 4 -->
                     <div class="gallery-card" data-category="comercial">
                         <div class="card-image-wrapper">
-                            <img src="img/galeria/instalacion-comercial.jpg" alt="Instalación eléctrica comercial" loading="lazy">
-                            <span class="card-badge comercial"><i class="fas fa-industry"></i> Comercial</span>
+                            <img src="img/galeria/instalacion-comercial.webp" alt="Instalación eléctrica comercial" loading="lazy" width="1200" height="896" decoding="async">
+                            <a class="image-trigger" href="img/galeria/instalacion-comercial.webp" aria-label="Ampliar: Instalación eléctrica comercial"></a>
+                            <span class="card-badge comercial"><i aria-hidden="true" class="fas fa-industry"></i> Comercial</span>
                             <div class="card-info">
                                 <h3>Instalación Comercial</h3>
                                 <p>Instalaciones eléctricas completas para locales comerciales con certificación SEC.</p>
@@ -173,8 +179,9 @@
                     <!-- Card 5 -->
                     <div class="gallery-card" data-category="comercial">
                         <div class="card-image-wrapper">
-                            <img src="img/galeria/trifasicos-industriales.jpg" alt="Tableros trifásicos industriales" loading="lazy">
-                            <span class="card-badge comercial"><i class="fas fa-industry"></i> Comercial</span>
+                            <img src="img/galeria/trifasicos-industriales.webp" alt="Tableros trifásicos industriales" loading="lazy" width="1200" height="654" decoding="async">
+                            <a class="image-trigger" href="img/galeria/trifasicos-industriales.webp" aria-label="Ampliar: Tableros trifásicos industriales"></a>
+                            <span class="card-badge comercial"><i aria-hidden="true" class="fas fa-industry"></i> Comercial</span>
                             <div class="card-info">
                                 <h3>Tableros Trifásicos Industriales</h3>
                                 <p>Montaje de tableros trifásicos de distribución y fuerza para instalaciones industriales.</p>
@@ -189,8 +196,9 @@
                     <!-- Card 6 -->
                     <div class="gallery-card" data-category="comercial">
                         <div class="card-image-wrapper">
-                            <img src="img/galeria/iluminacion-comercial.jpg" alt="Iluminación comercial" loading="lazy">
-                            <span class="card-badge comercial"><i class="fas fa-industry"></i> Comercial</span>
+                            <img src="img/galeria/iluminacion-comercial.webp" alt="Iluminación comercial" loading="lazy" width="800" height="600" decoding="async">
+                            <a class="image-trigger" href="img/galeria/iluminacion-comercial.webp" aria-label="Ampliar: Iluminación comercial"></a>
+                            <span class="card-badge comercial"><i aria-hidden="true" class="fas fa-industry"></i> Comercial</span>
                             <div class="card-info">
                                 <h3>Iluminación Comercial</h3>
                                 <p>Sistemas de iluminación para tiendas, oficinas y bodegas con óptimo rendimiento lumínico.</p>
@@ -205,8 +213,9 @@
                     <!-- Card 7 -->
                     <div class="gallery-card" data-category="comercial">
                         <div class="card-image-wrapper">
-                            <img src="img/galeria/enchufe.jpg" alt="Puntos eléctricos" loading="lazy">
-                            <span class="card-badge comercial"><i class="fas fa-industry"></i> Comercial</span>
+                            <img src="img/galeria/enchufe.webp" alt="Puntos eléctricos" loading="lazy" width="820" height="340" decoding="async">
+                            <a class="image-trigger" href="img/galeria/enchufe.webp" aria-label="Ampliar: Puntos eléctricos"></a>
+                            <span class="card-badge comercial"><i aria-hidden="true" class="fas fa-industry"></i> Comercial</span>
                             <div class="card-info">
                                 <h3>Puntos Eléctricos</h3>
                                 <p>Instalación de puntos eléctricos para uso comercial e industrial con normativa vigente.</p>
@@ -226,7 +235,7 @@
         <section class="gallery-section" id="certificaciones">
             <div class="gallery-container">
                 <div class="section-title-group">
-                    <div class="section-icon"><i class="fas fa-shield-alt"></i></div>
+                    <div class="section-icon"><i aria-hidden="true" class="fas fa-shield-alt"></i></div>
                     <span class="section-label">Nuestras Certificaciones</span>
                     <h2>Servicios y Certificaciones SEC</h2>
                     <p>Ofrecemos un respaldo completo en trámites, certificaciones y declaraciones ante la Superintendencia de Electricidad y Combustibles.</p>
@@ -235,37 +244,37 @@
                 <div class="cert-grid">
 
                     <div class="cert-card">
-                        <div class="cert-icon"><i class="fas fa-file-alt"></i></div>
+                        <div class="cert-icon"><i aria-hidden="true" class="fas fa-file-alt"></i></div>
                         <h3>Declaración TE1</h3>
                         <p>Instalaciones interiores de baja tensión para viviendas y locales comerciales.</p>
                     </div>
 
                     <div class="cert-card">
-                        <div class="cert-icon"><i class="fas fa-file-contract"></i></div>
+                        <div class="cert-icon"><i aria-hidden="true" class="fas fa-file-contract"></i></div>
                         <h3>Declaración TE2</h3>
-                        <p>Instalaciones de alumbrado público y privado de media tensión.</p>
+                        <p>Declaración de instalaciones eléctricas de alumbrado público.</p>
                     </div>
 
                     <div class="cert-card">
-                        <div class="cert-icon"><i class="fas fa-file-signature"></i></div>
+                        <div class="cert-icon"><i aria-hidden="true" class="fas fa-file-signature"></i></div>
                         <h3>Declaración TE3</h3>
-                        <p>Instalaciones de alta tensión y líneas de distribución eléctrica.</p>
+                        <p>Declaración de instalaciones de cercos eléctricos.</p>
                     </div>
 
                     <div class="cert-card">
-                        <div class="cert-icon"><i class="fas fa-file-invoice"></i></div>
+                        <div class="cert-icon"><i aria-hidden="true" class="fas fa-file-invoice"></i></div>
                         <h3>Declaración TE4</h3>
-                        <p>Instalaciones provisorias y de faena para construcción y eventos.</p>
+                        <p>Declaración de puesta en servicio de generadoras residenciales.</p>
                     </div>
 
                     <div class="cert-card">
-                        <div class="cert-icon"><i class="fas fa-drafting-compass"></i></div>
+                        <div class="cert-icon"><i aria-hidden="true" class="fas fa-drafting-compass"></i></div>
                         <h3>Planos Eléctricos</h3>
                         <p>Diseño y elaboración de planos eléctricos según normativa SEC vigente para aprobación.</p>
                     </div>
 
                     <div class="cert-card">
-                        <div class="cert-icon"><i class="fas fa-certificate"></i></div>
+                        <div class="cert-icon"><i aria-hidden="true" class="fas fa-certificate"></i></div>
                         <h3>Certificación SEC</h3>
                         <p>Certificación integral de instalaciones nuevas y regularización de existentes ante SEC.</p>
                     </div>
@@ -280,11 +289,11 @@
                 <h2>¿Necesitas un proyecto eléctrico?</h2>
                 <p>Contáctanos hoy para una cotización gratuita. Cubrimos todo Chile con instaladores certificados SEC.</p>
                 <div class="cta-buttons">
-                    <a href="https://wa.me/+56968601223?text=Hola,%20quiero%20cotizar%20un%20proyecto%20eléctrico" class="btn-primary" target="_blank" rel="noopener noreferrer">
-                        <i class="fab fa-whatsapp"></i> Cotizar por WhatsApp
+                    <a href="https://wa.me/56968601223?text=Hola,%20quiero%20cotizar%20un%20proyecto%20eléctrico" class="btn-primary" target="_blank" rel="noopener noreferrer">
+                        <i aria-hidden="true" class="fab fa-whatsapp"></i> Cotizar por WhatsApp
                     </a>
                     <a href="mailto:eckvek.ing.spa@gmail.com" class="btn-secondary">
-                        <i class="fas fa-envelope"></i> Escribir un Email
+                        <i aria-hidden="true" class="fas fa-envelope"></i> Escribir un Email
                     </a>
                 </div>
             </div>
@@ -293,11 +302,11 @@
     </main>
 
     <!-- Lightbox Modal -->
-    <div class="lightbox-overlay" id="lightbox" role="dialog" aria-label="Visor de imagen">
-        <button class="lightbox-close" id="lightbox-close" aria-label="Cerrar">&times;</button>
-        <img src="" alt="" id="lightbox-img">
+    <dialog class="lightbox-overlay" id="lightbox" aria-label="Visor de imagen" aria-describedby="lightbox-caption">
+        <button class="lightbox-close" id="lightbox-close" type="button" aria-label="Cerrar">&times;</button>
+        <img alt="" id="lightbox-img">
         <div class="lightbox-caption" id="lightbox-caption"></div>
-    </div>
+    </dialog>
 
     <!-- Footer -->
     <footer>
@@ -307,7 +316,7 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="js/galeria.js" defer></script>
+    <script src="js/main.js" defer></script>
     <script src="js/lightning.js" defer></script>
 
 </body>
